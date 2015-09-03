@@ -23,29 +23,29 @@ p = optparse.OptionParser(usage)
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help()
-	sys.exit(0)
+    p.print_help()
+    sys.exit(0)
 
 ## read the input files
 
 if args:
-	for f in args:
-		bib = BibTeX.BibTeX()
-		bib.parseFile(f)
-		print "%d records read from %s" % (len(bib), bib.getFilename())
+    for f in args:
+        bib = BibTeX.BibTeX()
+        bib.parseFile(f)
+        print "%d records read from %s" % (len(bib), bib.getFilename())
 
-		print
-		for be in bib:
-			c = be.check()
-			if c:
-				print "%15s: missing " % (be.getKey()), string.join(c, ', ')
+        print
+        for be in bib:
+            c = be.check()
+            if c:
+                print "%15s: missing " % (be.getKey()), string.join(c, ', ')
 else:
-	bib = BibTeX.BibTeX()
-	bib.parseFile()
-	print "%d records read from %s" % (len(bib), '(stdin)')
+    bib = BibTeX.BibTeX()
+    bib.parseFile()
+    print "%d records read from %s" % (len(bib), '(stdin)')
 
-	print
-	for be in bib:
-		c = be.check()
-		if c:
-			print "%15s: missing " % (be.getKey()), string.join(c, ', ')
+    print
+    for be in bib:
+        c = be.check()
+        if c:
+            print "%15s: missing " % (be.getKey()), string.join(c, ', ')

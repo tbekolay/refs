@@ -34,50 +34,50 @@ globals().update(opts.__dict__)
 
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help()
-	sys.exit(0)
+    p.print_help()
+    sys.exit(0)
 
 # load extra keys from the specified .aux file
 if aux:
-	f = open(aux, 'r')
-	citation = re.compile(r'''^\\citation\{(\w+)\}''')
-	for line in f:
-		m = citation.match(line)
-		if m:
-			keys.append( m.group(1) )
+    f = open(aux, 'r')
+    citation = re.compile(r'''^\\citation\{(\w+)\}''')
+    for line in f:
+        m = citation.match(line)
+        if m:
+            keys.append( m.group(1) )
 keys2 = keys[:]
 
 def action(bib, filename):
-	found = []
-	for k in keys:
-		try:
-			be = bib[k]
-			found.append(be)
-			keys2.remove(k)		# keep track of keys not found
-		except:
-			pass
-	if found:
-		for be in found:
-			if showBrief:
-				if f:
-					print f
-				be.brief()
-			else:
-				be.write()
+    found = []
+    for k in keys:
+        try:
+            be = bib[k]
+            found.append(be)
+            keys2.remove(k)     # keep track of keys not found
+        except:
+            pass
+    if found:
+        for be in found:
+            if showBrief:
+                if f:
+                    print f
+                be.brief()
+            else:
+                be.write()
 if args:
-	for f in args:
-		bib = BibTeX.BibTeX()
-		bib.parseFile(f)
-		action(bib, f)
+    for f in args:
+        bib = BibTeX.BibTeX()
+        bib.parseFile(f)
+        action(bib, f)
 else:
-	bib = BibTeX.BibTeX()
-	bib.parseFile()
-	action(bib, None)
+    bib = BibTeX.BibTeX()
+    bib.parseFile()
+    action(bib, None)
 
 if dumpStrings and not showBrief:
-	bib.writeStrings()
+    bib.writeStrings()
 
 if keys2:
-	print
-	for k in keys2:
-		print >> sys.stderr, "%s not found" % k
+    print
+    for k in keys2:
+        print >> sys.stderr, "%s not found" % k

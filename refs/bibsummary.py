@@ -23,32 +23,32 @@ p = optparse.OptionParser(usage)
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help()
-	sys.exit(0)
+    p.print_help()
+    sys.exit(0)
 
 ## read the input files
 bib = BibTeX.BibTeX()
 if args:
-	for f in args:
-		bib.parseFile(f)
+    for f in args:
+        bib.parseFile(f)
 else:
-	bib.parseFile()
+    bib.parseFile()
 
 count = {}
 urlCount = 0
 
 
 for be in bib:
-	t = be.getRefType()
-	if be.getField('Url'):
-		urlCount += 1
-	if t in count:
-		count[t] += 1
-	else:
-		count[t] = 1
+    t = be.getRefType()
+    if be.getField('Url'):
+        urlCount += 1
+    if t in count:
+        count[t] += 1
+    else:
+        count[t] = 1
 
 for k in count:
-	print "  %15s: %4d" % (k, count[k])
+    print "  %15s: %4d" % (k, count[k])
 
 if urlCount > 0:
-	print "  %d with URL links" % urlCount
+    print "  %d with URL links" % urlCount

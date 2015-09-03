@@ -4,7 +4,7 @@
 #
 # each output line is of the form:
 #
-#	Surname,I  N
+#   Surname,I  N
 #
 # where I is their initial and N is the number of occurrences.  This can be
 # fed throug sort -n -r +1 to get a list of authors in descending order
@@ -32,30 +32,30 @@ p = optparse.OptionParser(usage)
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help()
-	sys.exit(0)
+    p.print_help()
+    sys.exit(0)
 
 
 ## read the input files
 bib = BibTeX.BibTeX()
 if args:
-	for f in args:
-		bib.parseFile(f)
+    for f in args:
+        bib.parseFile(f)
 else:
-	bib.parseFile()
+    bib.parseFile()
 
 # Build a list of unique names: Surname,Initial and update occurrence
 nameList = {}
 for be in bib:
-	surnames = be.getAuthorsSurnameList()
-	if surnames:
-		for s in surnames:
-			s = ','.join(s)
-			if s in nameList:
-				nameList[s] += 1
-			else:
-				nameList[s] = 1
+    surnames = be.getAuthorsSurnameList()
+    if surnames:
+        for s in surnames:
+            s = ','.join(s)
+            if s in nameList:
+                nameList[s] += 1
+            else:
+                nameList[s] = 1
 
 # display names and occurrence.
 for s,v in  nameList.iteritems():
-	print s, v
+    print s, v

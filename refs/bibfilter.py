@@ -3,7 +3,7 @@
 # Filter bib records that match search criteria
 #
 # todo:
-#	handle tex accent characters, utf-16 etc
+#   handle tex accent characters, utf-16 etc
 
 import Bibliography
 import BibEntry
@@ -42,22 +42,22 @@ p.set_defaults(since=None, before=None, caseSens=False, type='all', hasfield=Non
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help()
-	sys.exit(0)
+    p.print_help()
+    sys.exit(0)
 
 if since:
-	startDate = map(int, since.split('/'))
+    startDate = map(int, since.split('/'))
 if before:
-	endDate = map(int, before.split('/'))
+    endDate = map(int, before.split('/'))
 
 
 ## read the input files
 bib = BibTeX.BibTeX()
 if args:
-	for f in args:
-		bib.parseFile(f)
+    for f in args:
+        bib.parseFile(f)
 else:
-	bib.parseFile()
+    bib.parseFile()
 
 #print >> sys.stderr,  "looking for <%s> in field <%s>, reftype <%s>" % (field[1], field[0], type)
 
@@ -65,19 +65,19 @@ else:
 l = bib.search(field[0], field[1], type, caseSens)
 count = 0
 for be in l:
-	# check if it has the required field
-	if hasfieldpp:
-		if not be.getField(hasfield):
-			continue
+    # check if it has the required field
+    if hasfieldpp:
+        if not be.getField(hasfield):
+            continue
 
-	# check the date range
-	if be.afterDate(startDate) and be.beforeDate(endDate):
-		count += 1
-		if not showCount:
-			if showBrief:
-				print be
-			else:
-				be.write()
+    # check the date range
+    if be.afterDate(startDate) and be.beforeDate(endDate):
+        count += 1
+        if not showCount:
+            if showBrief:
+                print be
+            else:
+                be.write()
 
 if showCount:
-	print count
+    print count

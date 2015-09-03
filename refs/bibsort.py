@@ -24,49 +24,49 @@ p.set_defaults(reverseSort=False, resolve=False)
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help()
-	sys.exit(0)
+    p.print_help()
+    sys.exit(0)
 
 count = {}
 
 sortReturn = -1 if reverseSort else 1
 
 def sortByDate(a, b):
-	# On input a and b are BibEntry objects
-	ay = a.getYear()
-	by = b.getYear()
-	if ay > by:
-		return -sortReturn
-	elif ay < by:
-		return sortReturn
-	else:
-		am = a.getMonth()
-		bm = b.getMonth()
-		if am > bm:
-			return -sortReturn
-		elif am < bm:
-			return sortReturn
-		else:
-			return 0
+    # On input a and b are BibEntry objects
+    ay = a.getYear()
+    by = b.getYear()
+    if ay > by:
+        return -sortReturn
+    elif ay < by:
+        return sortReturn
+    else:
+        am = a.getMonth()
+        bm = b.getMonth()
+        if am > bm:
+            return -sortReturn
+        elif am < bm:
+            return sortReturn
+        else:
+            return 0
 
 outbib = BibTeX.BibTeX()
 
 if args:
-	for f in args:
-		bib = BibTeX.BibTeX()
-		n = bib.parseFile(f)
+    for f in args:
+        bib = BibTeX.BibTeX()
+        n = bib.parseFile(f)
 
-		sys.stderr.write( "%d records read from %s\n" % (n, f) )
+        sys.stderr.write( "%d records read from %s\n" % (n, f) )
 
 else:
-	bib = BibTeX.BibTeX()
-	bib.parseFile()
+    bib = BibTeX.BibTeX()
+    bib.parseFile()
 
-	sys.stderr.write( "%d records read from stdin\n" % len(bib) )
+    sys.stderr.write( "%d records read from stdin\n" % len(bib) )
 
 # sort it
 bib.sort(sortByDate)
 
 # and output the result
 for s in bib:
-	s.write()
+    s.write()

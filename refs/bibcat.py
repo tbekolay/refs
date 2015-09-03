@@ -33,27 +33,27 @@ p.set_defaults(ignore=False, dumpStrings=True, verbose=False, resolve=False)
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help()
-	sys.exit(0)
+    p.print_help()
+    sys.exit(0)
 
 ## read the input files
 bib = BibTeX.BibTeX()
 if args:
-	for f in args:
-		nbib = bib.parseFile(f, ignore=ignore)
-		if verbose:
-			sys.stderr.write( "%d entries read from %s\n" % (len(bib), f) )
+    for f in args:
+        nbib = bib.parseFile(f, ignore=ignore)
+        if verbose:
+            sys.stderr.write( "%d entries read from %s\n" % (len(bib), f) )
 else:
-	nbib = bib.parseFile()
-	if verbose:
-		sys.stderr.write( "%d entries read from stdin\n" % (len(bib),) )
+    nbib = bib.parseFile()
+    if verbose:
+        sys.stderr.write( "%d entries read from stdin\n" % (len(bib),) )
 
 if resolve:
-	bib.resolveAbbrev()
+    bib.resolveAbbrev()
 
 if verbose:
-	sys.stderr.write( "%d abbreviations to write\n" % len(outbib.getAbbrevs()) )
-	sys.stderr.write( "%d entries to write\n" % len(outbib) )
+    sys.stderr.write( "%d abbreviations to write\n" % len(outbib.getAbbrevs()) )
+    sys.stderr.write( "%d entries to write\n" % len(outbib) )
 if dumpStrings:
-	bib.writeStrings()
+    bib.writeStrings()
 bib.write(resolve=resolve)
