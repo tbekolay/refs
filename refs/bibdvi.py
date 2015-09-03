@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# 
+#
 # Convert bib file(s) to dvi
 #
 # TODO
@@ -17,8 +17,8 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * The name of the copyright holder may not be used to endorse or 
-#	promote products derived from this software without specific prior 
+#     * The name of the copyright holder may not be used to endorse or
+#	promote products derived from this software without specific prior
 #	written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
@@ -33,13 +33,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-import Bibliography;
-import BibEntry;
-import BibTeX;
-import string;
-import sys;
-import os;
-import optparse;
+import Bibliography
+import BibEntry
+import BibTeX
+import string
+import sys
+import os
+import optparse
 
 ## parse switches
 usage = '''usage: %prog [options] [bibfiles]
@@ -47,64 +47,64 @@ usage = '''usage: %prog [options] [bibfiles]
 :: Convert bib file(s) to dvi'''
 p = optparse.OptionParser(usage)
 p.add_option('--xdvi', dest='xdvi', action='store_true',
-             help='launch xdvi when done');
+             help='launch xdvi when done')
 p.add_option('--bibstyle', dest='bibstyle', action='store', type='str',
-             help='specify a bibliography style file');
-p.set_defaults(xdvi=False, bibstyle='ieeetr', resolve=False);
+             help='specify a bibliography style file')
+p.set_defaults(xdvi=False, bibstyle='ieeetr', resolve=False)
 (opts, args) = p.parse_args()
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help();
-	sys.exit(0);
+	p.print_help()
+	sys.exit(0)
 
-## read the input files	
-bib = BibTeX.BibTeX();
+## read the input files
+bib = BibTeX.BibTeX()
 if args:
 	for f in args:
-		bib.parseFile(f);
+		bib.parseFile(f)
 else:
-	bib.parseFile();
-			
+	bib.parseFile()
+
 if args:
 	# a list of files is given, temp file is the same root name as the first argument
 	texfile = args[0]
-	texfile = texfile[0:string.rindex(texfile, '.bib')];
-	bibfiles = ','.join( [os.path.splitext(x)[0] for x in args] );
+	texfile = texfile[0:string.rindex(texfile, '.bib')]
+	bibfiles = ','.join( [os.path.splitext(x)[0] for x in args] )
 else:
 	# input from stdin, use stdin as the root filename
-	texfile = 'stdin';
-	fp = open(texfile+'.bib', 'w');
-	bib.write(file=fp,resolve=resolve);
-	fp.close();
-	bibfiles = 'stdin';
+	texfile = 'stdin'
+	fp = open(texfile+'.bib', 'w')
+	bib.write(file=fp,resolve=resolve)
+	fp.close()
+	bibfiles = 'stdin'
 
 print "Saving to", texfile
 
 
 ## create the latex source file
-tex = open("%s.tex" % texfile, "w");
+tex = open("%s.tex" % texfile, "w")
 
 tex.write(
 r"""\documentclass{article}
 \begin{document}
-""");
+""")
 
 # write the cite keys
 for be in bib:
-	tex.write("\\nocite{%s}\n" % be.getKey());
+	tex.write("\\nocite{%s}\n" % be.getKey())
 
 # add the bibliog commands
 tex.write(
 r"""\bibliographystyle{%s}
 \bibliography{strings,%s}
 \end{document}
-""" % (bibstyle, bibfiles) );
-tex.close();
+""" % (bibstyle, bibfiles) )
+tex.close()
 
-os.system("pslatex %s" % texfile);
-os.system("bibtex %s" % texfile);
-os.system("pslatex %s" % texfile);
+os.system("pslatex %s" % texfile)
+os.system("bibtex %s" % texfile)
+os.system("pslatex %s" % texfile)
 
 if xdvi and os.getenv('DISPLAY'):
-	os.system("xdvi %s" % texfile);
+	os.system("xdvi %s" % texfile)

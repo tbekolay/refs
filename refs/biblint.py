@@ -14,8 +14,8 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * The name of the copyright holder may not be used to endorse or 
-#	promote products derived from this software without specific prior 
+#     * The name of the copyright holder may not be used to endorse or
+#	promote products derived from this software without specific prior
 #	written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
@@ -30,12 +30,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-import Bibliography;
-import BibEntry;
-import BibTeX;
-import string;
-import sys;
-import optparse;
+import Bibliography
+import BibEntry
+import BibTeX
+import string
+import sys
+import optparse
 
 ## parse switches
 usage = '''usage: %prog [options] [bibfiles]
@@ -43,37 +43,37 @@ usage = '''usage: %prog [options] [bibfiles]
 :: Report missing fields and bad values in bibtex records'''
 p = optparse.OptionParser(usage)
 #p.add_option('--reverse', dest='reverseSort', action='store_true',
-#             help='sort into ascending data order (old at top)');
+#             help='sort into ascending data order (old at top)')
 #p.add_option('--resolve', dest='resolve', action='store_true',
-#             help='resolve cross reference entries');
-#p.set_defaults(reverseSort=False, resolve=False);
+#             help='resolve cross reference entries')
+#p.set_defaults(reverseSort=False, resolve=False)
 (opts, args) = p.parse_args()
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help();
-	sys.exit(0);
+	p.print_help()
+	sys.exit(0)
 
-## read the input files	
+## read the input files
 
 if args:
 	for f in args:
-		bib = BibTeX.BibTeX();
-		bib.parseFile(f);
-		print "%d records read from %s" % (len(bib), bib.getFilename());
-		
+		bib = BibTeX.BibTeX()
+		bib.parseFile(f)
+		print "%d records read from %s" % (len(bib), bib.getFilename())
+
 		print
 		for be in bib:
-			c = be.check();
+			c = be.check()
 			if c:
 				print "%15s: missing " % (be.getKey()), string.join(c, ', ')
 else:
-	bib = BibTeX.BibTeX();
-	bib.parseFile();
-	print "%d records read from %s" % (len(bib), '(stdin)');			
+	bib = BibTeX.BibTeX()
+	bib.parseFile()
+	print "%d records read from %s" % (len(bib), '(stdin)')
 
 	print
 	for be in bib:
-		c = be.check();
+		c = be.check()
 		if c:
 			print "%15s: missing " % (be.getKey()), string.join(c, ', ')

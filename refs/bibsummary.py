@@ -1,14 +1,6 @@
 #! /usr/bin/env python
 #
-# Display a list of authors and their occurrence in the bibfiles
-#
-# each output line is of the form:
-#
-#	Surname,I  N
-#
-# where I is their initial and N is the number of occurrences.  This can be 
-# fed throug sort -n -r +1 to get a list of authors in descending order
-# of occurrence.  Figure out who is your favourite co-author!
+# Display a summary of the reference types
 
 # Copyright (c) 2007, Peter Corke
 #
@@ -21,8 +13,8 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * The name of the copyright holder may not be used to endorse or 
-#	promote products derived from this software without specific prior 
+#     * The name of the copyright holder may not be used to endorse or
+#	promote products derived from this software without specific prior
 #	written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
@@ -37,53 +29,53 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-
-import Bibliography;
-import BibEntry;
-import BibTeX;
-import string;
-import sys;
-import getopt;
-import optparse;
+import Bibliography
+import BibEntry
+import BibTeX
+import string
+import sys
+import optparse
 
 ## parse switches
 usage = '''usage: %prog [options] [bibfiles]
 
-:: Display a list of authors and their occurrence'''
+:: Display a summary of the reference types'''
 p = optparse.OptionParser(usage)
 #p.add_option('--reverse', dest='reverseSort', action='store_true',
-#             help='sort into ascending data order (old at top)');
+#             help='sort into ascending data order (old at top)')
 #p.add_option('--resolve', dest='resolve', action='store_true',
-#             help='resolve cross reference entries');
-#p.set_defaults(reverseSort=False, resolve=False);
+#             help='resolve cross reference entries')
+#p.set_defaults(reverseSort=False, resolve=False)
 (opts, args) = p.parse_args()
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help();
-	sys.exit(0);
+	p.print_help()
+	sys.exit(0)
 
-
-## read the input files	
-bib = BibTeX.BibTeX();
+## read the input files
+bib = BibTeX.BibTeX()
 if args:
 	for f in args:
-		bib.parseFile(f);
+		bib.parseFile(f)
 else:
-	bib.parseFile();
+	bib.parseFile()
 
-# Build a list of unique names: Surname,Initial and update occurrence
-nameList = {};
+count = {}
+urlCount = 0
+
+
 for be in bib:
-	surnames = be.getAuthorsSurnameList();
-	if surnames:
-		for s in surnames:
-			s = ','.join(s);
-			if s in nameList:
-				nameList[s] += 1
-			else:
-				nameList[s] = 1;
+	t = be.getRefType()
+	if be.getField('Url'):
+		urlCount += 1
+	if t in count:
+		count[t] += 1
+	else:
+		count[t] = 1
 
-# display names and occurrence.
-for s,v in  nameList.iteritems():
-	print s, v;
+for k in count:
+	print "  %15s: %4d" % (k, count[k])
+
+if urlCount > 0:
+	print "  %d with URL links" % urlCount

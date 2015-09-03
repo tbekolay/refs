@@ -16,8 +16,8 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * The name of the copyright holder may not be used to endorse or 
-#	promote products derived from this software without specific prior 
+#     * The name of the copyright holder may not be used to endorse or
+#	promote products derived from this software without specific prior
 #	written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
@@ -32,15 +32,15 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-import Bibliography;
-import BibEntry;
-import BibTeX;
-import string;
-import sys;
-import optparse;
+import Bibliography
+import BibEntry
+import BibTeX
+import string
+import sys
+import optparse
 
-startDate = None;
-endDate = None;
+startDate = None
+endDate = None
 
 ## parse switches
 usage = '''usage: %prog [options] [bibfiles]
@@ -49,62 +49,62 @@ usage = '''usage: %prog [options] [bibfiles]
 ::   Multiple rules can be applied at the same time '''
 p = optparse.OptionParser(usage)
 p.add_option('--since', dest='since', action='store', type='str',
-             help='start date for selection, format YYYY or MM/YYYY');
+             help='start date for selection, format YYYY or MM/YYYY')
 p.add_option('--before', dest='before', action='store', type='str',
-             help='end date for selection, format YYYY or MM/YYYY');
+             help='end date for selection, format YYYY or MM/YYYY')
 p.add_option('-i', '--case', dest='caseSens', action='store_true',
-             help='make search case sensitive');
+             help='make search case sensitive')
 p.add_option('--type', dest='type', action='store', type='str',
-             help='reference type to search (default all)');
+             help='reference type to search (default all)')
 p.add_option('--field', dest='field', nargs=2, action='store', type='str',
-             help='field to search (default all) and the value which matches any substring in the specified field');
+             help='field to search (default all) and the value which matches any substring in the specified field')
 p.add_option('--hasfield', dest='hasfield', action='store', type='str',
-             help='true if specified field is present');
+             help='true if specified field is present')
 p.add_option('--brief', dest='showBrief', action='store_true',
-             help='show the matching records in brief format (default is BibTeX)');
+             help='show the matching records in brief format (default is BibTeX)')
 p.add_option('--count', dest='showCount', action='store_true',
-             help='show just the number of matching records');
-p.set_defaults(since=None, before=None, caseSens=False, type='all', hasfield=None, field=['all', '*'], showBrief=False, showCount=False);
+             help='show just the number of matching records')
+p.set_defaults(since=None, before=None, caseSens=False, type='all', hasfield=None, field=['all', '*'], showBrief=False, showCount=False)
 (opts, args) = p.parse_args()
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help();
-	sys.exit(0);
+	p.print_help()
+	sys.exit(0)
 
 if since:
-	startDate = map(int, since.split('/'));
+	startDate = map(int, since.split('/'))
 if before:
-	endDate = map(int, before.split('/'));
+	endDate = map(int, before.split('/'))
 
 
-## read the input files	
-bib = BibTeX.BibTeX();
+## read the input files
+bib = BibTeX.BibTeX()
 if args:
 	for f in args:
-		bib.parseFile(f);
+		bib.parseFile(f)
 else:
-	bib.parseFile();
-			
+	bib.parseFile()
+
 #print >> sys.stderr,  "looking for <%s> in field <%s>, reftype <%s>" % (field[1], field[0], type)
 
 # search the bibliography for all matches to the field query
-l = bib.search(field[0], field[1], type, caseSens);
-count = 0;
+l = bib.search(field[0], field[1], type, caseSens)
+count = 0
 for be in l:
 	# check if it has the required field
 	if hasfield:
 		if not be.getField(hasfield):
-			continue;
+			continue
 
 	# check the date range
 	if be.afterDate(startDate) and be.beforeDate(endDate):
-		count += 1;
+		count += 1
 		if not showCount:
 			if showBrief:
-				print be;
+				print be
 			else:
-				be.write();
+				be.write()
 
 if showCount:
-	print count;
+	print count

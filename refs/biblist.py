@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# 
+#
 # List bibtex file in human readable format
 #
 
@@ -14,8 +14,8 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * The name of the copyright holder may not be used to endorse or 
-#	promote products derived from this software without specific prior 
+#     * The name of the copyright holder may not be used to endorse or
+#	promote products derived from this software without specific prior
 #	written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
@@ -30,12 +30,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-import Bibliography;
-import BibEntry;
-import BibTeX;
-import string;
-import sys;
-import optparse;
+import Bibliography
+import BibEntry
+import BibTeX
+import string
+import sys
+import optparse
 
 ## parse switches
 usage = '''usage: %prog [options] [bibfiles]
@@ -43,36 +43,36 @@ usage = '''usage: %prog [options] [bibfiles]
 :: Display bibtex file in human readable format'''
 p = optparse.OptionParser(usage)
 p.add_option('--brief', dest='showBrief', action='store_true',
-             help='brief listing (one line per entry)');
+             help='brief listing (one line per entry)')
 p.add_option('--abbrev', dest='resolveAbbrevs', action='store_true',
-             help='resolve abbreviations from defined strings');
+             help='resolve abbreviations from defined strings')
 #p.add_option('--resolve', dest='resolve', action='store_true',
-#             help='resolve cross reference entries');
-p.set_defaults(showBrief=False, resolveAbbrevs=False);
+#             help='resolve cross reference entries')
+p.set_defaults(showBrief=False, resolveAbbrevs=False)
 (opts, args) = p.parse_args()
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help();
-	sys.exit(0);
+	p.print_help()
+	sys.exit(0)
 
-## read the input files	
-bib = BibTeX.BibTeX();
+## read the input files
+bib = BibTeX.BibTeX()
 if args:
 	for f in args:
-		bib.parseFile(f);
+		bib.parseFile(f)
 else:
-	bib.parseFile();
+	bib.parseFile()
 
-# resolve cross refs and abbreviations			
-bib.resolveCrossRef();
+# resolve cross refs and abbreviations
+bib.resolveCrossRef()
 if resolveAbbrevs:
-	bib.resolveAbbrev();
+	bib.resolveAbbrev()
 
 # output the readable text
 for be in bib:
 	if showBrief:
-		be.brief();
+		be.brief()
 	else:
-		be.display();
+		be.display()
 	print

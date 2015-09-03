@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 #
-# Sort bibliographies in chronological order
+# Concatenate bib file(s) to stdout.  Each file is parsed then the BibTeX
+# records are regenerated.
 #
 
 # Copyright (c) 2007, Peter Corke
@@ -14,8 +15,8 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * The name of the copyright holder may not be used to endorse or 
-#	promote products derived from this software without specific prior 
+#     * The name of the copyright holder may not be used to endorse or
+#	promote products derived from this software without specific prior
 #	written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
@@ -30,71 +31,56 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-import Bibliography;
-import BibEntry;
-import BibTeX;
-import string;
-import sys;
-import optparse;
+import Bibliography
+import BibEntry
+import BibTeX
+import string
+import sys
+import optparse
+
+resolve = False
 
 
 ## parse switches
 usage = '''usage: %prog [options] [bibfiles]
 
-:: Sort bibliographies in chronological order'''
+:: Concatenate bib file(s) to stdout.
+::   Each file is parsed then the BibTeX records are regenerated'''
 p = optparse.OptionParser(usage)
-p.add_option('--reverse', dest='reverseSort', action='store_true',
-             help='sort into ascending data order (old at top)');
+p.add_option('--ignore', dest='ignore', action='store_true',
+             help='ignore duplicate items')
+p.add_option('--nostrings', dest='dumpStrings', action='store_false',
+             help='dump string definitions')
+p.add_option('-v', '--verbose', dest='verbose', action='store_true',
+             help='print some extra information')
 p.add_option('--resolve', dest='resolve', action='store_true',
-             help='resolve cross reference entries');
-p.set_defaults(reverseSort=False, resolve=False);
+             help='resolve cross reference entries')
+p.set_defaults(ignore=False, dumpStrings=True, verbose=False, resolve=False)
 (opts, args) = p.parse_args()
 globals().update(opts.__dict__)
 
 if len(args) == 0 and sys.stdin.isatty():
-	p.print_help();
-	sys.exit(0);
+	p.print_help()
+	sys.exit(0)
 
-count = {};
-
-sortReturn = -1 if reverseSort else 1;
-
-def sortByDate(a, b):
-	# On input a and b are BibEntry objects
-	ay = a.getYear();
-	by = b.getYear();
-	if ay > by:
-		return -sortReturn;
-	elif ay < by:
-		return sortReturn;
-	else:
-		am = a.getMonth();
-		bm = b.getMonth();
-		if am > bm:
-			return -sortReturn;
-		elif am < bm:
-			return sortReturn;
-		else:
-			return 0;
-
-outbib = BibTeX.BibTeX();
-
+## read the input files
+bib = BibTeX.BibTeX()
 if args:
 	for f in args:
-		bib = BibTeX.BibTeX();
-		n = bib.parseFile(f);
-
-		sys.stderr.write( "%d records read from %s\n" % (n, f) );
-
+		nbib = bib.parseFile(f, ignore=ignore)
+		if verbose:
+			sys.stderr.write( "%d entries read from %s\n" % (len(bib), f) )
 else:
-	bib = BibTeX.BibTeX();
-	bib.parseFile();
+	nbib = bib.parseFile()
+	if verbose:
+		sys.stderr.write( "%d entries read from stdin\n" % (len(bib),) )
 
-	sys.stderr.write( "%d records read from stdin\n" % len(bib) );
+if resolve:
+	bib.resolveAbbrev()
 
-# sort it		
-bib.sort(sortByDate);
-
-# and output the result
-for s in bib:
-	s.write();
+if verbose:
+	sys.stderr.write( "%d abbreviations to write\n" % len(outbib.getAbbrevs()) )
+	sys.stderr.write( "%d entries to write\n" % len(outbib) )
+if dumpStrings:
+	bib.writeStrings()
+bib.write(resolve=resolve)
