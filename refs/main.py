@@ -3,7 +3,7 @@ import sys
 
 import click
 
-from . import BibEntry, Bibliography
+from .core import Bibliography
 
 
 class Refs(object):
@@ -32,7 +32,7 @@ def main(ctx, master, debug):
 def list(refs, bibliography, brief, abbrev, resolve):
     """Print bibliography in readable format."""
     # TODO handle multiple bibs?
-    bib = Bibliography.Bibliography()
+    bib = Bibliography()
     bib.load_bibtex(bibliography)
 
     if abbrev:
@@ -56,7 +56,7 @@ def list(refs, bibliography, brief, abbrev, resolve):
 @click.pass_obj
 def sort(refs, bibliography, overwrite):
     """Sort bibliography by citekey."""
-    bib = Bibliography.Bibliography()
+    bib = Bibliography()
     bib.load_bibtex(bibliography)
     bib.sort()
 
