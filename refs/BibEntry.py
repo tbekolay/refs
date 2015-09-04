@@ -362,7 +362,7 @@ class BibEntry(object):
                 fp.write(",\n")
             else:
                 fp.write("\n")
-        fp.write("}\n\n")
+        fp.write("}\n")
 
     def search(self, target, field="all", ignorecase=True):
         def _search(field):

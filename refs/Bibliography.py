@@ -395,14 +395,9 @@ class Bibliography(object):
         return bibcount
 
 
-    def write_bibtex(self, file=sys.stdout, resolve=False):
-        if resolve:
-            dict = self.stringDict
-        else:
-            dict = None
-
-        for be in self:
-            be.write(file, dict)
+    def write_bibtex(self, file=sys.stdout):
+        for bibentry in self:
+            bibentry.write_bibtex(file)
 
     def write_strings(self, file=sys.stdout):
         for abbrev, value in self.abbrevDict.items():

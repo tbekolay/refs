@@ -30,6 +30,7 @@ def main(ctx, master, debug):
 @click.argument('bibliography')
 @click.pass_obj
 def list(refs, bibliography, brief, abbrev, resolve):
+    """Print bibliography in readable format."""
     # TODO handle multiple bibs?
     bib = Bibliography.Bibliography()
     bib.load_bibtex(bibliography)
@@ -46,6 +47,25 @@ def list(refs, bibliography, brief, abbrev, resolve):
         else:
             bibentry.display()
         print
+
+
+@main.command()
+@click.option('--overwrite', is_flag=True,
+              help="overwrite bibliography with sorted version")
+@click.argument('bibliography')
+@click.pass_obj
+def sort(refs, bibliography, overwrite):
+    """Sort bibliography by citekey."""
+    bib = Bibliography.Bibliography()
+    bib.load_bibtex(bibliography)
+    bib.sort()
+
+    if overwrite:
+        with open(bibliography, 'w') as fp:
+            bib.write_bibtex(fp)
+    else:
+        bib.write_bibtex(sys.stdout)
+
 
 if __name__ == '__main__':
     main()
