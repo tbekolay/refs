@@ -2,44 +2,33 @@
 #   - essentially a container for many BibEntry objects
 #   - provides methods for reading/writing the bibliography
 #   - provides iterators, sorting etc
+#
+# TODO add __enter__ and __exit__ to make a context manager
 
-
-import string
-import BibEntry
-import urllib
-import urlparse
-import os
 import os.path
 import sys
+import urllib
+import urlparse
 
-NoSuchFile = "No such file"
+from . import BibEntry
+from .compat import is_integer, is_string
 
-class Bibliography:
 
+class Bibliography(object):
     def __init__(self):
-        self.keyList = []
-        self.abbrevDict = {}
+        self.bibentries = []
+        self.abbrevs = {}
 
-    def open(self, filename):
-        if filename == '-':
+    def open(self, path_or_url):
+        if path_or_url == '-':
             self.filename = "stdin"
             return sys.stdin
-        urlbits = urlparse.urlparse('~/lib/bib/z.bib')
-        if urlbits[0]:
-            # path is a URL
-            fp = urllib.urlopen(filename)
-            self.filename = filename
+        urlbits = urlparse.urlparse(path_or_url)
+        if urlbits.scheme:
+            fp = urllib.urlopen(path_or_url)
+            self.filename = path_or_url
         else:
-            # path is a local file
-            path = os.environ['BIBPATH']
-            for p in string.split(path, os.pathsep):
-                f = os.path.join(p, filename)
-                if os.path.isfile(f):
-                    break
-            else:
-                raise NoSuchFile
-
-            fp = open(f, "r")
+            fp = open(path_or_url, "r")
             home = os.path.expanduser('~')
             f2 = os.path.abspath(f)
             common = os.path.commonprefix([home, f2])
@@ -47,95 +36,70 @@ class Bibliography:
                 self.filename = "~" + f2[len(common):]
             else:
                 self.filename = f
-
-            return fp
+        return fp
 
     def close(self, fp):
         fp.close()
 
-    # resolve all abbreviations found in the value fields of all entries
-    def resolveAbbrev(self):
-        #print >> sys.stderr, len(self.abbrevDict)
-        for be in self:
-            for f in be:
-                v = be.getField(f)
-                if isinstance(v,str):
-                    if v in self.abbrevDict:
-                        if self.abbrevDict[v]:
-                            be.setField(f, self.abbrevDict[v])
+    @property
+    def keys(self):
+        return [x.key for x in self.bibentries]
 
-    def insertEntry(self, be, ignore=False):
-        #print >> sys.stderr, "inserting key ", be.getKey()
-        # should check to see if be is of BibEntry type
-        key = be.getKey()
-        if key in [x.key for x in self.keyList]:
-            if not ignore:
-                print >> sys.stderr, "key %s already in dictionary" % (key)
-            return False
-        self.keyList.append(be)
-        return True
+    def resolve_abbrev(self):
+        """Resolve all abbreviations found in value fields."""
+        for bibentry in self:
+            for field in bibentry:
+                v = bibentry.get(f)
+                if is_string(v):
+                    if v in self.abbrevs:
+                        if self.abbrevs[v]:
+                            bibentry.setField(f, self.abbrevs[v])
 
-    def insertAbbrev(self, abbrev, value):
-        #print >> sys.stderr, "inserting abbrev ", abbrev
-        if abbrev in self.abbrevDict:
-            #print >> sys.stderr, "abbrev %s already in list" % (abbrev)
-            return False
-        self.abbrevDict[abbrev] = value
-        #be.brief()
-        return True
+    def insert_entry(self, bibentry):
+        if not isinstance(bibentry, BibEntry):
+            raise TypeError("Can only insert BibEntry instances.")
+        if bibentry.key in self.keys:
+            raise ValueError(
+                "key %s already exists. Please change the key." % bibentry.key)
+        self.bibentries.append(bibentry)
 
-    def __repr__(self):
-        print >> sys.stderr
+    def insert_abbrev(self, abbrev, value):
+        if abbrev in self.abbrevs:
+            raise ValueError("abbrev %s already exists." % abbrev)
+        self.abbrevs[abbrev] = value
 
     def brief(self):
-        for be in self:
-            be.brief()
-
-    def getFilename(self):
-        return self.filename
-
-    def getAbbrevs(self):
-        return self.abbrevDict
-
+        for bibentry in self:
+            bibentry.brief()
 
     def display(self):
-        for be in self:
-            be.display()
-            print >> sys.stderr
+        for bibentry in self:
+            bibentry.display()
 
     def __contains__(self, key):
-        return key in [x.key for x in self.keyList]
+        return key in self.keys
 
-    def __getitem__(self, i):
-        if type(i) is str:
-            index = [x.key for x in self.keyList].index(i)
-            return self.keyList[index]
-        elif type(i) is int:
-            return self.keyList[i]
-        else:
-            raise
+    def __getitem__(self, idx):
+        if is_string(idx):
+            return self.bibentries[self.keys.index(idx)]
+        elif is_integer(idx):
+            return self.bibentries[idx]
+        raise KeyError("Can only index in with strings or integers.")
 
     def __len__(self):
-        return len(self.keyList)
+        return len(self.bibentries)
 
+    def sort(self):
+        """Sort entries by key."""
+        self.bibentries.sort(key=lambda be: be.key)
 
-    def sort(self, sortfunc):
-        # turn the dictionary of entries into a list so we can sort it
-        self.keyList.sort(sortfunc)
-
-
-    # return list of all bibentry's that match the search spec
-    def search(self, key, str, type="all", caseSens=0):
-        if str == '*':
-            return self.keyList
+    def search(self, key, target, reftype="all", ignorecase=True):
+        if target == '*':
+            return self.bibentries
 
         result = []
-        if string.lower(type) == "all":
-            for be in self:
-                if be.search(key, str, caseSens):
-                    result.append(be)
-        else:
-            for be in self:
-                if be.isRefType(type) and be.search(key, str, caseSens):
-                    result.append(be)
+        for bibentry in self:
+            if ((reftype.lower() == 'all' or bibentry.reftype == reftype)
+                    and bibentry.search(key, target, ignorecase)):
+                result.append(bibentry)
         return result
