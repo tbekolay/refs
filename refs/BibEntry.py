@@ -303,9 +303,21 @@ class BibEntry(object):
         self.fieldDict['Type'] = value
 
     def set(self, key, value):
+        def _strip(s):
+            s = s.strip(' ')
+            if (s[0] == '"') and (s[-1] == '"'):
+                return s[1:-1]
+            if (s[0] == '{') and (s[-1] == '}'):
+                return s[1:-1]
+            return s
+
         if key not in self.allfields:
             raise AttributeError, "[%s] Field '%s' not recognized" % (
                 self.key, key)
+
+        if key in ("Author", "Editor"):
+            value = value.split(" and ")
+            value = [_strip(v) for v in value]
 
         if key == 'Year':
             self.year = value
@@ -313,6 +325,44 @@ class BibEntry(object):
             self.month = month
         else:
             self.fieldDict[key] = value
+
+    def write_bibtex(self, fp=sys.stdout):
+        """Write a BibTex format entry."""
+        fp.write("@%s{%s,\n"  % (self.reftype, self.key))
+        count = 0
+        for rk in self.fieldDict:
+            count += 1
+            # skip internally used fields
+            if rk[0] == '_':
+                continue
+            if rk == 'Type':
+                continue
+
+            # generate the entry
+            value = self.fieldDict[rk]
+            fp.write("  %s=" % rk)
+
+            if rk in ['Author', 'Editor']:
+                fp.write("{%s}" % " and ".join(value))
+            elif rk == 'Month':
+                if value:
+                    fp.write("{%s}" % value)
+                else:
+                    value = self.month_name
+                    fp.write("%s" % value[:3].lower())
+            else:
+                # is it an abbrev?
+                if value in self.bibliography.abbrevs:
+                    fp.write("%s" % value)
+                else:
+                    fp.write("{%s}" % value)
+
+            # add comma to all but last fields
+            if count < len(self.fieldDict):
+                fp.write(",\n")
+            else:
+                fp.write("\n")
+        fp.write("}\n\n")
 
     def search(self, target, field="all", ignorecase=True):
         def _search(field):
