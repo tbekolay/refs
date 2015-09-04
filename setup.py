@@ -34,5 +34,6 @@ setup(
         ]
     },
     install_requires=[
+        'click',
     ],
 )

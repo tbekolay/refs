@@ -14,7 +14,7 @@ import sys
 import warnings
 
 from .compat import is_integer, is_iterable, is_string, range
-from .utils import english_join, fuzzy_match, mogrify
+from .utils import english_join, fuzzymatch, mogrify
 
 
 class BibEntry(object):
@@ -46,36 +46,37 @@ class BibEntry(object):
                   'techreport',
                   'unpublished')
 
-    allfields = ('_Reftype',
-                 'Address',
-                 'Author',
-                 'Booktitle',
-                 'Chapter',
-                 'Edition',
-                 'Editor',
-                 'Howpublished',
-                 'Institution',
-                 'Journal',
-                 'Month',
-                 'Number',
-                 'Organization',
-                 'Pages',
-                 'Publisher',
-                 'School',
-                 'Series',
-                 'Title',
-                 'Type',
-                 'Volume',
-                 'Year',
-                 'Note',
-                 'Code',
-                 'Url',
-                 'Crossref',
-                 'Annote',
-                 'Abstract',
-                 'Date-added',
-                 'Date-modified',
-                 'Read')
+    allfields = ('_reftype',
+                 'address',
+                 'author',
+                 'booktitle',
+                 'chapter',
+                 'edition',
+                 'editor',
+                 'howpublished',
+                 'institution',
+                 'journal',
+                 'month',
+                 'number',
+                 'organization',
+                 'pages',
+                 'publisher',
+                 'school',
+                 'series',
+                 'title',
+                 'type',
+                 'volume',
+                 'year',
+                 'note',
+                 'code',
+                 'url',
+                 'crossref',
+                 'annote',
+                 'abstract',
+                 'date-added',
+                 'date-modified',
+                 'read',
+                 'doi')
 
     def __init__(self, key, bib):
         self.key = key
@@ -107,18 +108,18 @@ class BibEntry(object):
         return r
 
     def brief(self):
-        return str(self)
+        print(self)
 
     def display(self):
-        r = "%12s: %s" % ("CiteKey", self.key)
+        r = "%12s: %s\n" % ("CiteKey", self.key)
         for k in self.fieldDict:
             if k[0] == '_':
                 continue
             if k == 'Author':
-                r += "%12s: %s" % (k, self.authors)
+                r += "%12s: %s\n" % (k, self.authors)
             else:
-                r += "%12s: %s" % (k, self.fieldDict[k])
-        return r
+                r += "%12s: %s\n" % (k, self.fieldDict[k])
+        print(r)
 
     def __getitem__(self, i):
         if is_string(i):
@@ -298,8 +299,7 @@ class BibEntry(object):
     def reftype(self, value):
         value = value.lower()
         if value not in self.validtypes:
-            raise AttributeError, "bad reference type [%s]" % self.getKey()
-        self.reftype = value
+            raise AttributeError, "bad reference type [%s]" % self.key
         self.fieldDict['Type'] = value
 
     def set(self, key, value):

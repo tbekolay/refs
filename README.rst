@@ -61,3 +61,9 @@ Sort one or more bibliographies by citekey.
 .. code-block:: bash
 
    refs sort BIBLIOGRAPHY...
+
+Output a bibliography in human-readable format.
+
+.. code-block:: bash
+
+   refs list BIBLIOGRAPHY

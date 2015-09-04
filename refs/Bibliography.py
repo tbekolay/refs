@@ -31,12 +31,12 @@ class Bibliography(object):
         else:
             fp = open(path_or_url, "r")
             home = os.path.expanduser('~')
-            f2 = os.path.abspath(f)
+            f2 = os.path.abspath(path_or_url)
             common = os.path.commonprefix([home, f2])
             if common:
                 self.filename = "~" + f2[len(common):]
             else:
-                self.filename = f
+                self.filename = path_or_url
         return fp
 
     def close(self, fp):
@@ -57,7 +57,7 @@ class Bibliography(object):
                             bibentry.setField(f, self.abbrevs[v])
 
     def insert_entry(self, bibentry):
-        if not isinstance(bibentry, BibEntry):
+        if not isinstance(bibentry, BibEntry.BibEntry):
             raise TypeError("Can only insert BibEntry instances.")
         if bibentry.key in self.keys:
             raise ValueError(
@@ -114,13 +114,7 @@ class Bibliography(object):
         # get the file into one huge string
         nbib = 0
         s = fp.read()
-        try:
-            nbib = self.parseString(s, ignore=ignore, verbose=verbose)
-        except AttributeError, err:
-            print >> sys.stderr, "Error %s" % err
-
-        self.close(fp)
-        return nbib
+        return self.loads_bibtex(s, ignore=ignore)
 
     def loads_bibtex(self, s, ignore=False):
         class BibLexer(object):
@@ -136,7 +130,7 @@ class Bibliography(object):
                     raise StopIteration
                 c = self.in_str[self.pos]
                 if c == '\n':
-                    self.lineNum += 1
+                    self.linenum += 1
                 self.pos += 1
                 return c
 
@@ -151,7 +145,7 @@ class Bibliography(object):
                 """Push a character back onto the input."""
                 self.pos -= 1
                 if c == '\n':
-                    self.lineNum -= 1
+                    self.linenum -= 1
 
             def skipwhite(self):
                 """Eat whitepsace characters and comments."""
@@ -226,7 +220,7 @@ class Bibliography(object):
 
             def __repr__(self):
                 if self.is_entry():
-                    return = "@ %s" % self.val
+                    return "@ %s" % self.val
                 elif self.is_delim_r():
                     return "  }"
                 elif self.is_string():
@@ -315,22 +309,22 @@ class Bibliography(object):
 
                 t = self.tok.next()
                 if not t.is_entry():
-                    raise SyntaxError(self.tok.lex.lineNum)
+                    raise SyntaxError(self.tok.lex.linenum)
                 if t.val.lower() == 'string':
                     tn = self.tok.next()
                     if not tn.is_string():
-                        raise SyntaxError(self.tok.lex.lineNum)
+                        raise SyntaxError(self.tok.lex.linenum)
                     t = self.tok.next()
                     if not t.isequal():
-                        raise SyntaxError(self.tok.lex.lineNum)
+                        raise SyntaxError(self.tok.lex.linenum)
                     tv = self.tok.next()
                     if not tv.isstring():
-                        raise SyntaxError(self.tok.lex.lineNum)
+                        raise SyntaxError(self.tok.lex.linenum)
                     # insert string into the string table
                     self.bibtex.insert_abbrev(tn.val, _strip(tv.val))
                     t = self.tok.next()
                     if not t.is_delim_r():
-                        raise SyntaxError(self.tok.lex.lineNum)
+                        raise SyntaxError(self.tok.lex.linenum)
                 elif t.val.lower() == 'comment':
                     depth = 0
                     while True:
@@ -348,15 +342,15 @@ class Bibliography(object):
                     # get the cite key
                     ck = self.tok.next()
                     if not ck.is_string():
-                        raise SyntaxError(self.tok.lex.lineNum)
+                        raise SyntaxError(self.tok.lex.linenum)
 
-                    bibentry = BibTeXEntry(ck.val, self.bibtex)
+                    bibentry = BibEntry.BibEntry(ck.val, self.bibtex)
                     bibentry.reftype = t.val
 
                     # get the comma
                     ck = self.tok.next()
                     if not ck.is_comma():
-                        raise SyntaxError(self.tok.lex.lineNum)
+                        raise SyntaxError(self.tok.lex.linenum)
 
                     # get the field value pairs
                     for tf in self.tok:
@@ -364,13 +358,13 @@ class Bibliography(object):
                         if tf.is_delim_r():
                             break
                         if not tf.is_string():
-                            raise SyntaxError(self.tok.lex.lineNum)
+                            raise SyntaxError(self.tok.lex.linenum)
                         t = self.tok.next()
                         if not t.is_equal():
-                            raise SyntaxError(self.tok.lex.lineNum)
+                            raise SyntaxError(self.tok.lex.linenum)
                         ts = self.tok.next()
                         if not ts.is_string():
-                            raise SyntaxError(self.tok.lex.lineNum)
+                            raise SyntaxError(self.tok.lex.linenum)
                         bibentry.set(tf.val, _strip(ts.val))
 
                         # if it was an abbrev in the file, put it in the
@@ -384,9 +378,9 @@ class Bibliography(object):
                         elif t.is_delim_r():
                             break
                         else:
-                            raise SyntaxError(self.tok.lex.lineNum)
+                            raise SyntaxError(self.tok.lex.linenum)
 
-                    self.bibtex.insertEntry(bibentry, ignore)
+                    self.bibtex.insert_entry(bibentry)
                 return
 
         bibparser = BibParser(s, self)
@@ -401,7 +395,7 @@ class Bibliography(object):
         return bibcount
 
 
-    def write_bibtex(self, file=sys.stdout, resolve=0):
+    def write_bibtex(self, file=sys.stdout, resolve=False):
         if resolve:
             dict = self.stringDict
         else:
@@ -415,13 +409,13 @@ class Bibliography(object):
             file.write("@string{ %s = {%s} }\n" % (abbrev, value) )
 
     # resolve BibTeX's cross reference capability
-    def resolveCrossRef(self):
-        for be in self:
+    def resolve_crossref(self):
+        for bibentry in self:
             try:
-                xfref = self.getField('crossref')
+                xref = self.get('crossref')
             except:
                 return
 
             for f in xref:
-                if not (f in be):
-                    be.setField(f, xref.getField(f))
+                if f not in bibentry:
+                    bibentry.set(f, xref.get(f))
