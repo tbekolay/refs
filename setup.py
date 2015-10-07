@@ -35,5 +35,7 @@ setup(
     },
     install_requires=[
         'click',
+        'mendeley',
+        'requests',
     ],
 )

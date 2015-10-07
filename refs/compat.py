@@ -4,10 +4,12 @@ import sys
 PY2 = sys.version_info[0] == 2
 
 if PY2:
+    import ConfigParser as configparser
     string_types = (str, unicode)
     int_types = (int, long)
     range = xrange
 else:
+    import configparser
     string_types = (str,)
     int_types = (int,)
     range = range

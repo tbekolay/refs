@@ -1,0 +1,6 @@
+[general]
+master = ~/.refs/master.bib
+
+[mendeley]
+client_id = ''
+client_secret = ''
