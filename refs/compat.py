@@ -8,11 +8,19 @@ if PY2:
     string_types = (str, unicode)
     int_types = (int, long)
     range = xrange
+
+    # No iterkeys; use ``for key in dict:`` instead
+    iteritems = lambda d: d.iteritems()
+    itervalues = lambda d: d.itervalues()
 else:
     import configparser
     string_types = (str,)
     int_types = (int,)
     range = range
+
+    # No iterkeys; use ``for key in dict:`` instead
+    iteritems = lambda d: iter(d.items())
+    itervalues = lambda d: iter(d.values())
 
 
 def is_integer(obj):

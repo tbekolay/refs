@@ -351,7 +351,8 @@ class Entry(object):
     def reftype(self, value):
         value = value.lower()
         if value not in self.validtypes:
-            raise AttributeError, "bad reference type [%s]" % self.key
+            raise AttributeError("[%s] Bad reference type '%s'" % (
+                self.key, value))
         self.fieldDict['Type'] = value
 
     def set(self, key, value):
@@ -404,7 +405,8 @@ class Entry(object):
                     fp.write("%s" % value[:3].lower())
             else:
                 # is it an abbrev?
-                if value in self.bibliography.abbrevs:
+                if (self.bibliography is not None
+                    and value in self.bibliography.abbrevs):
                     fp.write("%s" % value)
                 else:
                     fp.write("{%s}" % value)

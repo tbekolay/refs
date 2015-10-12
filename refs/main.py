@@ -2,9 +2,11 @@ import os
 import sys
 
 import click
+import mendeley.resources.catalog
 
-from .compat import range
+from .compat import iteritems, range
 from .core import Bibliography
+from .metadata import doc2bib
 from .metadata import search as _search
 from .rc import rc
 
@@ -76,28 +78,36 @@ def sort(refs, bibliography, overwrite):
 
 
 @main.command()
-@click.option('--limit', default=10, type=int)
+@click.option('--abstract', is_flag=True,
+              help="include the abstract, if available.")
 @click.argument('query')
 @click.pass_obj
-def search(refs, query, limit):
+def search(refs, query, abstract):
     """Search for a reference."""
-    items = _search(query, refs.m_id, refs.m_secret).iter(page_size=limit)
 
-    for i, item in enumerate(items):
-        click.echo(item.title)
-        click.echo(item.id)
+    result = _search(query, refs.m_id, refs.m_secret)
 
-        if i > limit:
-            click.echo("over limit")
+    if isinstance(result, mendeley.resources.catalog.CatalogSearch):
+
+        for i, item in enumerate(result.iter()):
+            click.echo(item.title)
+            if item.identifiers is not None:
+                for ident, identval in iteritems(item.identifiers):
+                    click.echo("  %s: %s" % (ident, identval))
+
+            result = item
             break
-    #     click.echo(items[i][u'title'][0])
-    #     if u'DOI' in items[i]:
-    #         click.echo("DOI: %s" % items[i][u'DOI'])
 
-    # click.echo("DEBUG: other info")
-    # click.echo(items[0].keys())
+            # TODO: show search results, prompt user for which one to choose
+            #
+            # if i > 100:
+            #     click.echo("Not found in 100 search results. Giving up.")
+            #     return
 
-
+    entry = doc2bib(result)
+    if not abstract:
+        del entry.fieldDict['abstract']
+    entry.write_bibtex(sys.stdout)
 
 
 if __name__ == '__main__':

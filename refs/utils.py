@@ -22,6 +22,6 @@ def english_join(words):
 
 def mogrify(s):
     """Removes punctuation marks and white space."""
-    s = string.lower(s)
+    s = s.lower()
     s = re.sub(r"[#{}:,&$ -'\"]", "", s)
     return s

@@ -2,18 +2,35 @@
 
 import hashlib
 import json
+import sys
 import urllib
 
-import mendeley
+import mendeley.models.catalog
 import requests
 import requests.auth
 
+from .core import Entry
 from .rc import rc
 
 def search(query, m_id, m_secret):
     mend = mendeley.Mendeley(m_id, m_secret)
     session = mend.start_client_credentials_flow().authenticate()
-    return session.catalog.search(query)
+    if query.startswith("10.") and "/" in query:
+        # Interpreting as a DOI
+        return session.catalog.by_identifier(doi=query, view='bib')
+    elif query.endswith(".pdf"):
+        # Interpreting as a file
+        filehash = sha1hash(query)
+        try:
+            return session.catalog.by_identifier(filehash=filehash, view='bib')
+        except mendeley.exception.MendeleyException:
+            # Let's not show tracebacks here
+            sys.tracebacklimit = 0
+            raise NotImplementedError(
+                "That file not in Mendeley's catalog. Parsing PDFs for "
+                "metadata not implemented yet.")
+    else:
+        return session.catalog.search(query, view='bib')
 
 
 def sha1hash(path):
@@ -22,11 +39,43 @@ def sha1hash(path):
     return sha1
 
 
-def doi2bib(doi, url_template="http://dx.doi.org/{}"):
-    url = url_template.format(doi)
 
-    headers = {'Accept': 'application/x-bibtex; charset=utf-8'}
-    r = requests.get(url, headers=headers)
-    r.encoding = "utf-8"
-    r.raise_for_status()
-    return r.text.strip()
+def doc2bib(mdoc, bib=None):
+    """Converts a mendeley.CatalogBibView to an Entry."""
+    assert isinstance(mdoc, mendeley.models.catalog.CatalogBibView)
+
+    # Map from Mendeley type to BibTeX type
+    type2reftype = {
+        'journal': 'article',
+        'book': 'book',
+        'generic': 'misc',
+        'book_section': 'inbook',
+        'conference_proceedings': 'inproceedings',
+        'working_paper': 'unpublished',
+        'report': 'techreport',
+        'web_page': 'misc',
+        'thesis': 'phdthesis',
+        'magazine_article': 'misc',
+        'statute': 'misc',
+        'patent': 'misc',
+        'newspaper_article': 'misc',
+        'computer_program': 'misc',
+        'hearing': 'misc',
+        'television_broadcast': 'misc',
+        'encyclopedia_article': 'misc',
+        'case': 'misc',
+        'film': 'misc',
+        'bill': 'misc',
+    }
+
+    key = "%s%s" % (mdoc.authors[0].last_name.lower(), mdoc.year)
+    entry = Entry(key, bib=bib)
+    entry.reftype = type2reftype[mdoc.type]
+    for field in entry.allfields:
+        if hasattr(mdoc, field):
+            if field == "type" and entry.reftype != "techreport":
+                continue
+            val = getattr(mdoc, field)
+            if val is not None:
+                entry.set(field, val)
+    return entry
