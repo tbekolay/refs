@@ -110,5 +110,13 @@ def search(refs, query, abstract):
     entry.write_bibtex(sys.stdout)
 
 
+@main.command()
+@click.option('--bibliography', default=None)
+@click.argument('citekey')
+@click.pass_obj
+def open(refs, citekey, bibliograph):
+    """Open a paper using the system default viewer."""
+
+
 if __name__ == '__main__':
     main()

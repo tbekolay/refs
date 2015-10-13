@@ -67,3 +67,9 @@ Output a bibliography in human-readable format.
 .. code-block:: bash
 
    refs list BIBLIOGRAPHY
+
+Open a PDF from your bibliography.
+
+.. code-block:: bash
+
+   refs open CITEKEY [BIBLIOGRAPHY]
