@@ -72,6 +72,11 @@ def doc2bib(mdoc, bib=None):
     entry = Entry(key, bib=bib)
     entry.reftype = type2reftype[mdoc.type]
     for field in entry.allfields:
+        if field == 'journal':
+            val = getattr(mdoc, 'source')
+            if val is not None:
+                entry.set(field, val)
+
         if hasattr(mdoc, field):
             if field == "type" and entry.reftype != "techreport":
                 continue

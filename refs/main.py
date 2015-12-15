@@ -77,15 +77,7 @@ def sort(refs, bibliography, overwrite):
         bib.write_bibtex(sys.stdout)
 
 
-@main.command()
-@click.option('--abstract', is_flag=True,
-              help="include the abstract, if available.")
-@click.argument('query')
-@click.pass_obj
-def search(refs, query, abstract):
-    """Search for a reference."""
-
-    result = _search(query, refs.m_id, refs.m_secret)
+def ensure_result(result):
 
     if isinstance(result, mendeley.resources.catalog.CatalogSearch):
 
@@ -104,10 +96,41 @@ def search(refs, query, abstract):
             #     click.echo("Not found in 100 search results. Giving up.")
             #     return
 
+    return result
+
+
+
+@main.command()
+@click.option('--abstract', is_flag=True,
+              help="include the abstract, if available.")
+@click.argument('query')
+@click.pass_obj
+def search(refs, query, abstract):
+    """Search for a reference."""
+
+    result = ensure_result(_search(query, refs.m_id, refs.m_secret))
+
     entry = doc2bib(result)
-    if not abstract:
+    if not abstract and 'abstract' in entry.fieldDict:
         del entry.fieldDict['abstract']
     entry.write_bibtex(sys.stdout)
+
+
+@main.command()
+@click.argument('query')
+@click.pass_obj
+def rename(refs, query):
+    """Rename a file according to Mendeley search results."""
+
+    if not query.endswith(".pdf"):
+        raise click.BadParameter("QUERY must be a PDF file.")
+
+    result = ensure_result(_search(query, refs.m_id, refs.m_secret))
+    entry = doc2bib(result)
+
+    outname = "%s.pdf" % entry.key
+    click.echo("Renaming %s -> %s" % (query, outname))
+    os.rename(query, outname)
 
 
 @main.command()
